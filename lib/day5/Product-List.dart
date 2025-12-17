@@ -1,48 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: ProductList(),
-    );
-  }
-}
-
-class ProductList extends StatelessWidget {
+class ProductList extends StatefulWidget {
   const ProductList({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    /// 임의의 리스트
-    final List<Map<String, dynamic>> productList = [
-      {
-        'pName': '무선 키보드',
-        'category': '전자기기',
-        'price': 45000,
-        'info': '조용한 타건감의 블루투스 키보드',
-      },
-      {
-        'pName': '텀블러',
-        'category': '생활용품',
-        'price': 18000,
-        'info': '보온·보냉 스테인리스 텀블러',
-      },
-      {
-        'pName': '러닝화',
-        'category': '스포츠',
-        'price': 129000,
-        'info': '장시간 러닝에 적합한 쿠션',
-      },
-    ];
+  State<ProductList> createState() => _ProductListState();
+}
 
+class _ProductListState extends State<ProductList> {
+
+
+  @override
+  Widget build(BuildContext context) {
+    final FirebaseFirestore fs = FirebaseFirestore.instance;
     return Scaffold(
       appBar: AppBar(
         title: Text('제품 목록'),
@@ -75,79 +46,89 @@ class ProductList extends StatelessWidget {
         ],
       ),
 
-      body: ListView.builder(
-        padding: EdgeInsets.all(16),
-        itemCount: productList.length,
-        itemBuilder: (context, index) {
-          final product = productList[index];
-
-          return Card(
-            margin: EdgeInsets.all(6),
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
+      body: StreamBuilder(
+        stream: fs.collection("product").snapshots(),
+        builder: (context, snap) {
+          if (!snap.hasData) {
+            return CircularProgressIndicator(); // 로딩 상태 표시
+          }
+          return ListView(
+            children: snap.data!.docs.map((doc) {
+              return Card(
+                margin: EdgeInsets.all(6),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: Text(
-                          product['pName'],
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              doc['pName'],
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                        ),
+                          IconButton(
+                            icon: Icon(Icons.edit_outlined),
+                            onPressed: () {},
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                            ),
+                            onPressed: () async {
+                              // print(doc.id);
+                              await fs.collection("product").doc(doc.id).delete();
+                            },
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: Icon(Icons.edit_outlined),
-                        onPressed: () {},
+                      SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.category_outlined, size: 18),
+                          SizedBox(width: 6),
+                          Text(
+                            doc['category'],
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.delete_outline,
-                          color: Colors.red,
-                        ),
-                        onPressed: () {},
+                      SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.payments_outlined, size: 18),
+                          SizedBox(width: 6),
+                          Text(
+                            '₩ ${doc['price']}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.category_outlined, size: 18),
-                      SizedBox(width: 6),
+                      SizedBox(height: 10),
                       Text(
-                        product['category'],
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(Icons.payments_outlined, size: 18),
-                      SizedBox(width: 6),
-                      Text(
-                        '₩ ${product['price']}',
+                        doc['info'],
                         style: TextStyle(
-                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 10),
-                  Text(
-                    product['info'],
-                    style: TextStyle(
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
+              );
+            }).toList(),
+
           );
-        },
+        }
       ),
     );
   }
 }
+
+
