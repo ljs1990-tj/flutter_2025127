@@ -1,6 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import '../firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform, // Firebase 초기화 설정
+  );
   runApp(const MyApp());
 }
 
@@ -16,8 +23,28 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AddProduct extends StatelessWidget {
+class AddProduct extends StatefulWidget {
   const AddProduct({super.key});
+
+  @override
+  State<AddProduct> createState() => _AddProductState();
+}
+
+class _AddProductState extends State<AddProduct> {
+  final FirebaseFirestore fs = FirebaseFirestore.instance;
+  final TextEditingController _pName = TextEditingController();
+  final TextEditingController _category = TextEditingController();
+  final TextEditingController _price = TextEditingController();
+  final TextEditingController _info = TextEditingController();
+
+  Future<void> createProduct() async{
+    await fs.collection("product").add({
+      "pName" : _pName.text,
+      "category" : _category.text,
+      "price" : int.parse(_price.text),
+      "info" : _info.text
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +84,6 @@ class AddProduct extends StatelessWidget {
         padding: EdgeInsets.all(16),
         child: Column(
           children: [
-
             /// 이미지 등록 영역
             Card(
               child: GestureDetector(
@@ -103,6 +129,7 @@ class AddProduct extends StatelessWidget {
                     ),
                     SizedBox(height: 12),
                     TextField(
+                      controller: _pName,
                       decoration: InputDecoration(
                         labelText: '제품명',
                         filled: true,
@@ -114,6 +141,7 @@ class AddProduct extends StatelessWidget {
                     ),
                     SizedBox(height: 12),
                     TextField(
+                      controller: _category,
                       decoration: InputDecoration(
                         labelText: '카테고리',
                         filled: true,
@@ -125,6 +153,7 @@ class AddProduct extends StatelessWidget {
                     ),
                     SizedBox(height: 12),
                     TextField(
+                      controller: _price,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: '가격',
@@ -156,6 +185,7 @@ class AddProduct extends StatelessWidget {
                     ),
                     SizedBox(height: 12),
                     TextField(
+                      controller: _info,
                       maxLines: 4,
                       decoration: InputDecoration(
                         hintText: '제품에 대한 설명을 입력해주세요',
@@ -176,7 +206,7 @@ class AddProduct extends StatelessWidget {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: createProduct,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,
                   shape: RoundedRectangleBorder(
