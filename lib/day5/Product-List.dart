@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:newproject/day5/Product-View.dart';
 
 class ProductList extends StatefulWidget {
   const ProductList({super.key});
@@ -54,71 +55,79 @@ class _ProductListState extends State<ProductList> {
           }
           return ListView(
             children: snap.data!.docs.map((doc) {
-              return Card(
-                margin: EdgeInsets.all(6),
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              doc['pName'],
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+              return GestureDetector(
+                onTap: (){
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => ProductView(docId: doc.id))
+                  );
+                },
+                child: Card(
+                  margin: EdgeInsets.all(6),
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                doc['pName'],
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.edit_outlined),
-                            onPressed: () {},
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.delete_outline,
-                              color: Colors.red,
+                            IconButton(
+                              icon: Icon(Icons.edit_outlined),
+                              onPressed: () {},
                             ),
-                            onPressed: () async {
-                              // print(doc.id);
-                              await fs.collection("product").doc(doc.id).delete();
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.category_outlined, size: 18),
-                          SizedBox(width: 6),
-                          Text(
-                            doc['category'],
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Icon(Icons.payments_outlined, size: 18),
-                          SizedBox(width: 6),
-                          Text(
-                            '₩ ${doc['price']}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
+                            IconButton(
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                              ),
+                              onPressed: () async {
+                                // print(doc.id);
+                                await fs.collection("product").doc(doc.id).delete();
+                              },
                             ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        doc['info'],
-                        style: TextStyle(
-                          color: Colors.black,
+                          ],
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.category_outlined, size: 18),
+                            SizedBox(width: 6),
+                            Text(
+                              doc['category'],
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(Icons.payments_outlined, size: 18),
+                            SizedBox(width: 6),
+                            Text(
+                              '₩ ${doc['price']}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          doc['info'],
+                          style: TextStyle(
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
