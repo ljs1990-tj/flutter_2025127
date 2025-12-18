@@ -1,6 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import '../firebase_options.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform, // Firebase 초기화 설정
+  );
   runApp(const MyApp());
 }
 
@@ -23,7 +30,62 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  final FirebaseFirestore fs = FirebaseFirestore.instance;
+  TextEditingController idCtrl = TextEditingController();
+  TextEditingController pwdCtrl = TextEditingController();
+  TextEditingController pwd2Ctrl = TextEditingController();
+  TextEditingController nameCtrl = TextEditingController();
+  bool joinFlg = false;
   String gender = 'M';
+
+  Future<void> idCheck() async{
+    var checked = await fs.collection("member")
+        .where("memberId", isEqualTo: idCtrl.text).get();
+
+    if(checked.docs.isEmpty){
+      // 중복되지 않았으므로 사용 가능
+      setState(() {
+        joinFlg = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("사용 가능한 아이디!"))
+      );
+    } else {
+      // 아이디가 db에 있으므로 사용 불가
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("이미 사용중인 아이디 입니다."))
+      );
+    }
+
+  }
+
+  Future<void> join() async {
+
+    if(pwdCtrl.text != pwd2Ctrl.text){
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("비밀번호 서로 다름!"))
+      );
+      return;
+    }
+
+    if(idCtrl.text.isEmpty || pwdCtrl.text.isEmpty || nameCtrl.text.isEmpty){
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("빈 값 있으면 안됨"))
+      );
+      return;
+    }
+
+    await fs.collection("member").add({
+      "memberId" : idCtrl.text,
+      "pwd" : pwdCtrl.text,
+      "name" : nameCtrl.text,
+      "gender" : gender
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("회원가입 성공!"))
+    );
+    // idCtrl.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +108,8 @@ class _SignUpPageState extends State<SignUpPage> {
                   children: [
                     Expanded(
                       child: TextField(
+                        enabled: !joinFlg,
+                        controller: idCtrl,
                         decoration: InputDecoration(
                           labelText: '아이디',
                           hintText: '아이디를 입력하세요',
@@ -59,7 +123,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     SizedBox(
                       height: 56,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: idCheck,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.grey[300],
                           foregroundColor: Colors.black,
@@ -72,6 +136,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 SizedBox(height: 16),
                 // 비밀번호
                 TextField(
+                  controller: pwdCtrl,
                   obscureText: true,
                   decoration: InputDecoration(
                     labelText: '비밀번호',
@@ -85,6 +150,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
                 // 비밀번호 확인
                 TextField(
+                  controller: pwd2Ctrl,
                   obscureText: true,
                   decoration: InputDecoration(
                     labelText: '비밀번호 확인',
@@ -97,6 +163,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 SizedBox(height: 16),
                 // 이름
                 TextField(
+                  controller: nameCtrl,
                   decoration: InputDecoration(
                     labelText: '이름',
                     hintText: '홍길동',
@@ -149,7 +216,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 SizedBox(
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: joinFlg ? join : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blueAccent,
                       shape: RoundedRectangleBorder(
