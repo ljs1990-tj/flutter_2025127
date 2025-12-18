@@ -1,6 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import '../firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform, // Firebase 초기화 설정
+  );
   runApp(MyApp());
 }
 
@@ -23,6 +30,28 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  FirebaseFirestore fs = FirebaseFirestore.instance;
+  TextEditingController idCtrl = TextEditingController();
+  TextEditingController pwdCtrl = TextEditingController();
+
+  Future<void> login() async {
+    var snap = await fs.collection("member")
+                      .where("memberId", isEqualTo: idCtrl.text)
+                      .where("pwd", isEqualTo: pwdCtrl.text)
+                      .get();
+    if(snap.docs.isEmpty){
+      // 조건에 맞는 계정 존재하지 않는다. 로그인 실패
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("아이디/비밀번호 확인해주셈"))
+      );
+    } else {
+      // 로그인 성공
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("로그인 성공!"))
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,6 +70,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 // 아이디
                 TextField(
+                  controller: idCtrl,
                   decoration: InputDecoration(
                     labelText: '아이디',
                     hintText: '아이디를 입력하세요',
@@ -54,11 +84,12 @@ class _LoginPageState extends State<LoginPage> {
 
                 // 비밀번호
                 TextField(
+                  controller: pwdCtrl,
                   obscureText: true,
                   decoration: InputDecoration(
                     labelText: '비밀번호',
                     hintText: '비밀번호를 입력하세요',
-                    prefixIcon: Icon(Icons.lock_outline), 
+                    prefixIcon: Icon(Icons.lock_outline),
                     filled: true,
                     fillColor: Colors.white,
                   ),
@@ -71,7 +102,7 @@ class _LoginPageState extends State<LoginPage> {
                   height: 50,
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blueAccent,
                       elevation: 2,

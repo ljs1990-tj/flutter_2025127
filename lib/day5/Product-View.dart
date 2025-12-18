@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../day6/Payment.dart';
+
 class ProductView extends StatefulWidget {
   final String docId ;
   const ProductView({super.key, required this.docId});
@@ -36,7 +38,18 @@ class _ProductViewState extends State<ProductView> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text("제품명 : ${product["pName"]}"),
-            Text("가격 : ${product["price"]}")
+            Text("가격 : ${product["price"]}"),
+            ElevatedButton(
+                onPressed: (){
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => Payment(pName : product["pName"], price : product["price"])
+                      )
+                  );
+                },
+                child: Text("구매하기")
+            )
           ],
         ),
       ),
